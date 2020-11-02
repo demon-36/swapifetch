@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html style="background-color: lightcyan">
+    <head>
+        <style>
+            .loadBtn{
+                position: relative;
+                left: 50%;
+            }
+            .proele{
+                position: absolute;
+                left: 50%;
+            }
+            .subd{
+                width: max-content;
+                height: max-content;
+                position: relative;
+            }
+            .subdd{
+                width: max-content;
+                height: max-content;
+                border: 2px solid black;
+                position: relative;
+            }
+            .list{
+                width: max-content;
+                height: max-content;
+                border: 1px solid black;
+                position: relative;
+                left: 5%;
+            }
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script>
+            function isurl(x){
+                if(x==null)return 0;
+                let str=x.toString();
+                if(str.indexOf("http")==-1 && str.indexOf("https")==-1 && str.indexOf("ftp")==-1)return 0;
+                return 1;
+            }
+            function keyValue(key, p){
+                let x;
+                if(key=='height'){
+                    let n=+p[key]/30.48;
+                    let f=Math.floor(n);
+                    let i=Math.floor((n-f)*12);
+                    x=f+"'"+i+'"';
+                }
+                else x=p[key];
+                return x;
+            }
+            function managedata(p){
+                let listItemData=document.createElement('ul');
+                for(let key in p){
+                    let name=p["name"];
+                    let x=keyValue(key, p);
+                    if(Array.isArray(x)){
+                        let listItemUrlTable=document.createElement('table');
+                        let listItemUrlTableRow=document.createElement('tr');
+                        let listItemUrlTableData=document.createElement('td');
+                        let c=1;
+                        let subd=document.createElement('div');
+                        subd.className="subd";
+                        subd.id=name+key;
+                        for(let u of x){
+                            let listItemUrlTableBtn=document.createElement('button');
+                            $(listItemUrlTableBtn).text(key[0].toUpperCase()+key.slice(1)+" "+c);
+                            listItemUrlTableBtn.id=key+c;
+                            $(listItemUrlTableBtn).click(() => subdata(u,subd.id));
+                            $(listItemUrlTableData).append(listItemUrlTableBtn);
+                            c++;
+                        }
+                        $(subd).append(listItemUrlTableData);
+                        $(listItemUrlTableRow).append(subd);
+                        $(listItemUrlTable).append(listItemUrlTableRow);
+                        let listItemDataVal=document.createElement('li');
+                        $(listItemDataVal).text(key[0].toUpperCase()+key.slice(1)+" : ");
+                        $(listItemDataVal).append(listItemUrlTable);
+                        $(listItemData).append(listItemDataVal);
+                    }
+                    else if(isurl(x)){
+                        let listItemDataVal=document.createElement('li');
+                        let listItemDataBtn=document.createElement('button');
+                        let subd=document.createElement('div');
+                        subd.id="subd"+name+key;
+                        subd.className="subd";
+                        listItemDataBtn.id=key;
+                        $(listItemDataBtn).text(key[0].toUpperCase()+key.slice(1));
+                        $(listItemDataBtn).click(()=>{subdata(x, subd.id)});
+                        $(listItemDataVal).text(key[0].toUpperCase()+key.slice(1)+" : ");
+                        $(listItemDataVal).append(listItemDataBtn);
+                        $(subd).append(listItemDataVal);
+                        $(listItemData).append(subd);
+                    }
+                    else{
+                        let listItemDataVal=document.createElement('li');
+                        $(listItemDataVal).text(key[0].toUpperCase()+key.slice(1)+" : "+x);
+                        $(listItemData).append(listItemDataVal);
+                    }
+                }
+                return listItemData;
+            }
+            function subdata(url ,divId){
+                const proxy="https://cors-anywhere.herokuapp.com/";
+                const ul=url;
+                $("#subdd").remove();
+                fetch(proxy+ul)
+                .then(response => response.json())
+                .then(function(json){
+                    let listItemData=managedata(json);
+                    let listItem=document.createElement('ul');
+                    $(listItem).append(listItemData);
+                    let subdd=document.createElement('div');
+                    subdd.id="subdd";
+                    subdd.className="subdd";
+                    $(subdd).append(listItem);
+                    //$('#'+divId).append(subdd);
+                    document.getElementById(divId).appendChild(subdd);
+                })
+            }
+            async function loadit(){
+                const url="https://swapi.dev/api/people";
+                const proxy="https://cors-anywhere.herokuapp.com/";
+                fetch(proxy+url)
+                .then(response => response.json())
+                .then(function(json) {
+                    let people = json.results; 
+                    for(let p of people) {
+                        let listItemData=managedata(p);
+                        let listItem = document.createElement('ul'); 
+                        listItem.className="list";
+                        $(listItem).append(listItemData);
+                        $("#main").append(listItem);
+                    }
+                    $("#proele").remove();
+                })
+            }
+            function doit(){
+                let proele=document.createElement('p');
+                proele.id="proele";
+                proele.className="proele";
+                $("#main").append(proele);
+                $("#proele").css({"position": "absolute",  "left": "50%"});
+                $("#proele").text("Processing");
+                setTimeout(() => $("#proele").text("Requesting...."), 2000);
+                $("#loadBtn").remove();
+                setTimeout(res => loadit(), 2000);
+            }
+            $(document).ready(function(){
+                $("#loadBtn").click(doit);
+            });
+        </script>
+    </head>
+    <body>
+        <div id="main">
+            <button id="loadBtn" class="loadBtn">Load Data</button>
+        </div>
+    </body>
+</html> 
